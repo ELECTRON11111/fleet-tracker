@@ -1,9 +1,14 @@
+"use client";
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 const TruckListItem = ({ truckId, truckStatus, truckDriver, truckCity }) => {
+    const router = useRouter();
+
     return (
         <div 
             key={truckId} 
+            onClick={() => router.push(`/trucks/${truckId}`)}
             className="truck-list-item cursor-pointer flex flex-col gap-2 text-gray-500 ease-transition bg-white border border-gray-300 rounded-lg p-4 w-full hover:shadow-md"
         >
             <div className='flex items-center justify-between gap-3 w-full'>
