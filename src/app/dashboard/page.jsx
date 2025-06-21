@@ -16,7 +16,7 @@ const Page = () => {
     const [error, setError] = useState(null);
 
     const baseBackendUrl = "https://omoniyiopemipo.free.beeceptor.com"; // would've been an environment variable in production, but for this demo, it's hardcoded
-    const testBackendUrl = "https://api.mockfly.dev/mocks/a29428a8-de36-4866-b2b3-ae83d96130cf"; // for testing purposes, this is the endpoint to fetch trucks data
+    const testBackendUrl = "https://api.mockfly.dev/mocks/a29428a8-de36-4866-b2b3-ae83d96130cf"; // for testing purposes, this is the endpoint to fetch trucks data due to rate limits
 
     const day = new Date().getDate();
     const month = new Date().getMonth() + 1; 
@@ -27,7 +27,22 @@ const Page = () => {
     const today = `${day}${dayDivision.includes("1") ? "st" : dayDivision.includes("2") == 2 ? "nd" : dayDivision.includes("3") == 3 ? "rd" : "th"} ${months[month - 1]}, ${year}`;
 
     useEffect(() => {
-        // Fetch trucks data from the backend
+        // Check if trucks data is available in local storage
+        const storedTrucks = JSON.parse(localStorage.getItem("trucks")) || [];
+
+        if (storedTrucks.length > 0) {
+            setLoading(true);
+            setTrucks(storedTrucks);
+            
+            // simulate a delay to mimic fetching from backend
+            setTimeout(() => {
+                setFilteredTrucks(storedTrucks);
+                setLoading(false);
+            }, 1000);
+            return;
+        }
+
+        // If no data inlocalStorage, Fetch trucks data from the backend
         fetchTrucksData();
 
         console.log(trucks);
