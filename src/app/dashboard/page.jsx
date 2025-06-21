@@ -113,7 +113,7 @@ const Page = () => {
                     </svg>
                     <h1 className="text-4xl font-bold">FleetTracker</h1>
                     </div>
-                    <p className="text-xl text-muted-foreground">Fetching trucks data...</p>
+                    <p className="text-xl text-muted-foreground">Loading fleet data...</p>
                 </div>
             </div>
         )

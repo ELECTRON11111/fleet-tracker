@@ -65,7 +65,7 @@ export default function TrucksChart({ totalTrucks, inTransit, idle, avgIdleTime 
   return (
     <div className="w-full mt-2 my-4 h-full flex justify-center sm:h-[50vh]">
       {/* for tablet and desktop */}
-      <div className="hidden sm:block w-full h-full">
+      <div className="hidden sm:block w-full h-full md:flex justify-center">
         <Bar data={chartData} options={options} className="hidden sm:flex" />
       </div>
 
