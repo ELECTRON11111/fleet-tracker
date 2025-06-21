@@ -1,14 +1,34 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import dynamic from "next/dynamic";
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
+
+const TruckMap = dynamic(() => import("../../../components/TruckMap"), { ssr: false });
 
 export default function Page() {
     const [truck, setTruck] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [route, setRoute] = useState([]);
+
+    const intervalRef = useRef(null);
     
     const { truckId } = useParams();
     const router = useRouter();
+
+    const fallBackMapUI = (
+        <div id="center-div" className='text-center rounded-md py-6 px-8 bg-white text-gray-500 gap-3 flex flex-col items-center justify-center'>
+            <div className='p-3 rounded-full bg-blue-500 text-white '>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-7">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                </svg>
+            </div>
+            <h1 className='my-2 font-semibold text-2xl text-black'>{truckId}</h1>
+            <p>Some City</p>
+            <span id="coordinates-location">{"lat"}, {"long"}</span>
+        </div>
+    );
 
     useEffect(() => {
         setLoading(true);
@@ -23,15 +43,37 @@ export default function Page() {
         }
         
         // Find the truck with the given truckId
-        trucks.find(truck => truck.id === truckId) ? setTruck(trucks.find(truck => truck.id === truckId)) : setTruck(null);
+        const foundTruck = trucks.find(truck => truck.id === truckId);
+        setTruck(foundTruck || null);
 
-        const identifier = setTimeout(() => {
-            console.log("Truck data landed.");
-            setLoading(false); 
-        }, 2000);
+        if (foundTruck) {
+            setRoute([[foundTruck.location.lat, foundTruck.location.lng]]);
+        }
 
-        return () => clearTimeout(identifier);
+        setTimeout(() => setLoading(false), 2000);
+
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        } 
     }, [truckId]);
+
+    // Simulate movement for "In Transit"
+    useEffect(() => {
+        if (!truck || truck.status !== "In Transit") return;
+        intervalRef.current = setInterval(() => {
+            setTruck(prev => {
+                if (!prev) return prev;
+                // Move slightly northeast
+                const newLat = prev.location.lat + (Math.random() * 0.001);
+                const newLng = prev.location.lng + (Math.random() * 0.001);
+                const newLocation = { ...prev.location, lat: newLat, lng: newLng };
+                setRoute(r => [...r, [newLat, newLng]]);
+                return { ...prev, location: newLocation };
+            });
+        }, 10000); // every 10 seconds
+
+        return () => clearInterval(intervalRef.current);
+    }, [truck]);
 
     if (loading) {
         return (
@@ -145,20 +187,19 @@ export default function Page() {
                 */}
 
                 <div id="current-location" className='text-gray-500 w-full bg-white space-y-2 p-4 sm:p-6 rounded-md md:basis-[65%]'>
-                    <h1 className='text-black font-bold p-2 text-lg sm:text-xl'>Current Location</h1>
-                    <div id='map' className='bg-gradient-to-br from-blue-200 min-h-[50vh] ease-transition to-green-100 rounded-md p-6 sm:p-12 cursor-pointer w-full flex items-center justify-center'>
-                        <div id="center-div" className='text-center rounded-md py-6 px-8 bg-white text-gray-500 gap-3 flex flex-col items-center justify-center'>
-                            <div className='p-3 rounded-full bg-blue-500 text-white '>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-7">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                                </svg>
+                    <h1 className='text-black font-bold p-2 text-lg sm:text-xl'>Current Location</h1>  
+                    <Suspense fallback={fallBackMapUI}>
+                        {truck ? (
+                            <TruckMap
+                                position={[truck.location.lat, truck.location.lng]}
+                                route={route}
+                            />
+                        ) : (
+                            <div id='map' className='bg-gradient-to-br from-blue-200 min-h-[50vh] ease-transition to-green-100 rounded-md p-6 sm:p-12 cursor-pointer w-full flex items-center justify-center'>
+                                {fallBackMapUI}
                             </div>
-                            <h1 className='my-2 font-semibold text-2xl text-black'>{truckId}</h1>
-                            <p>{truck.location.city}</p>
-                            <span id="coordinates-location">{truck.location.lat}, {truck.location.lng}</span>
-                        </div>
-                    </div>
+                        )}
+                    </Suspense>
                 </div>
             </main>
         </div>

@@ -5,6 +5,10 @@
 @tailwind utilities;
 
 
+/* Leaflet Maps styles */
+@import "leaflet/dist/leaflet.css";
+@import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
