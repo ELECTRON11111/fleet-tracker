@@ -73,8 +73,8 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 ## API Usage
 
 Truck data was fetched using an external mock API called Beeceptor.
-The unique backend URL provided for my account is "https://omoniyiopemipo.free.beeceptor.com"
-The trucks data is gotten under the `/trucks` API endpoint. Therefore the data is on [https://omoniyiopemipo.free.beeceptor.com/trucks](https://omoniyiopemipo.free.beeceptor.com/trucks).
+The unique backend URL provided for my account is "https://omoniyiopemipodaniel.free.beeceptor.com"
+The trucks data is gotten under the `/trucks` API endpoint. Therefore the data is on [https://omoniyiopemipodaniel.free.beeceptor.com/trucks](https://omoniyiopemipodaniel.free.beeceptor.com/trucks).
 It contains a total of 8 JSON data items of the format 
 
 ```
