@@ -1,12 +1,22 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TruckListItem from '@/components/TruckListItem';
 
 const Page = () => {
     const [statusFilter, setStatusFilter] = useState("all");
+    const [trucks, setTrucks] = useState([]);
     const [filteredTrucks, setFilteredTrucks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [overviewCounts, setOverviewCounts] = useState({
+        totalTrucks: 0,
+        inTransit: 0,
+        idle: 0,
+        maintenance: 0
+    });
     const [error, setError] = useState(null);
+
+    const baseBackendUrl = "https://omoniyiopemipo.free.beeceptor.com"; // would've been an environment variable in production, but for this demo, it's hardcoded
+    const testBackendUrl = "https://api.mockfly.dev/mocks/a29428a8-de36-4866-b2b3-ae83d96130cf"; // for testing purposes, this is the endpoint to fetch trucks data
 
     const day = new Date().getDate();
     const month = new Date().getMonth() + 1; 
@@ -16,62 +26,91 @@ const Page = () => {
 
     const today = `${day}${dayDivision.includes("1") ? "st" : dayDivision.includes("2") == 2 ? "nd" : dayDivision.includes("3") == 3 ? "rd" : "th"} ${months[month - 1]}, ${year}`;
 
-    const trucks = [
-        {
-            id: "TRK001",
-            driver: "John Doe",
-            status: "In Transit",
-            location: {
-                city: "Dallas",
-                lat: 32.7767,
-                lng: -96.7970
-            }
-        },
-        {
-            id: "TRK002",
-            driver: "Jane Smith",
-            status: "Idle",
-            location: {
-                city: "Houston",
-                lat: 29.7604,
-                lng: -95.3698
-            }
-        },
-        {
-            id: "TRK003",
-            driver: "Mike Johnson",
-            status: "Maintenance",
-            location: {
-                city: "Austin",
-                lat: 30.2672,
-                lng: -97.7431
-            }
-        },
-        {
-            id: "TRK004",
-            driver: "Sarah Wilson",
-            status: "In Transit",
-            location: {
-                city: "San Antonio",
-                lat: 29.4241,
-                lng: -98.4936
-            }
-        },
-        {
-            id: "TRK005",
-            driver: "Robert Brown",
-            status: "Idle",
-            location: {
-                city: "Fort Worth",
-                lat: 32.7555,
-                lng: -97.3308
-            }
-        }
-    ];
+    useEffect(() => {
+        // Fetch trucks data from the backend
+        fetchTrucksData();
 
-    // save trucks to local storage
-    if (typeof window !== "undefined") {
-        localStorage.setItem("trucks", JSON.stringify(trucks));
+        console.log(trucks);
+    }, []);
+
+    useEffect(() => filterTrucks(), [statusFilter]);
+
+    useEffect(() => {
+        // update overview counts
+        setOverviewCounts({
+            totalTrucks: trucks.length,
+            inTransit: trucks.filter(truck => truck.status === "In Transit").length,
+            idle: trucks.filter(truck => truck.status === "Idle").length,   
+            maintenance: trucks.filter(truck => truck.status === "Maintenance").length
+        });
+    }, [trucks]);
+
+    const filterTrucks = () => {
+        if (statusFilter === "All") {
+            setFilteredTrucks([...trucks]);
+        } else {
+            setFilteredTrucks([...trucks].filter(truck => truck.status.toLowerCase() === statusFilter.toLowerCase()));
+        }
+    };
+
+    const fetchTrucksData = async () => {
+        try {
+            setLoading(true);
+            
+            const response = await fetch(`${testBackendUrl}/trucks`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            
+            if (!response.ok) {
+                setError("Network response was not ok - Rate limit exceeded or server error");
+                throw new Error("Network response was not ok");
+            }
+
+            const data = await response.json();
+
+            setTrucks(data);
+            setFilteredTrucks(data);
+
+            // save trucks data to local storage
+            if (typeof window !== "undefined") {
+                localStorage.setItem("trucks", JSON.stringify(data));
+            }
+        } catch (error) {
+            console.log("Error fetching trucks data:", error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="text-center">
+                    <div className="flex gap-3 items-center mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="blue" className="size-12">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                    </svg>
+                    <h1 className="text-4xl font-bold">FleetTracker</h1>
+                    </div>
+                    <p className="text-xl text-muted-foreground">Fetching trucks data...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-red-500">Data Fetch Error</h1>
+                    <p className="text-lg text-gray-600">{error}</p>
+                    <p className="text-lg text-gray-600">Check your network and try again.</p>
+                </div>
+            </div>
+        );
     }
     
     return (
@@ -105,7 +144,7 @@ const Page = () => {
                             </svg>
                         </div>
 
-                        <h1 className='font-extrabold mt-auto text-3xl'>5</h1>
+                        <h1 className='font-extrabold mt-auto text-3xl'>{overviewCounts.totalTrucks}</h1>
                     </div>
 
                     <div id="trucks-in-transit" className='bg-white gap-4 ease-transition flex flex-col justify-between p-4 w-full rounded-lg hover:shadow-md'>
@@ -116,7 +155,7 @@ const Page = () => {
                             </svg>
                         </div>
 
-                        <h1 className='font-extrabold mt-auto text-green-500 text-3xl'>2</h1>
+                        <h1 className='font-extrabold mt-auto text-green-500 text-3xl'>{overviewCounts.inTransit}</h1>
                     </div>
 
                     <div id="idle-trucks" className='bg-white gap-4 ease-transition flex flex-col justify-between p-4 rounded-lg w-full hover:shadow-md'>
@@ -127,7 +166,7 @@ const Page = () => {
                             </svg>
                         </div>
 
-                        <h1 className='font-extrabold mt-auto text-orange-500 text-3xl'>2</h1>
+                        <h1 className='font-extrabold mt-auto text-orange-500 text-3xl'>{overviewCounts.idle}</h1>
                     </div>
 
                     <div id="maintenance-trucks" className='bg-white ease-transition gap-4 flex flex-col justify-between p-4 w-full rounded-lg hover:shadow-md'>
@@ -153,16 +192,20 @@ const Page = () => {
                     <div id="heading" className='w-full flex items-center py-6 sm:py-7 justify-between gap-4'>
                         <h1 className='font-semibold sm:text-xl'>Fleet Overview</h1>
 
-                        <select name="filter" id="Filter" className='cursor-pointer text-sm p-2 outline-none rounded-lg'>
-                            <option value="All">All Status</option>
-                            <option value="In Transit">In Transit</option>
-                            <option value="Idle">Idle</option>
-                            <option value="Maintenance">Maintenance</option>
+                        <select 
+                            name="filter" id="Filter" 
+                            onChange={(e) => setStatusFilter(e.target.value)} 
+                            className='cursor-pointer text-sm p-2 outline-none rounded-lg'
+                        >
+                            <option value="All" className='cursor-pointer'>All Status</option>
+                            <option value="In Transit" className='cursor-pointer'>In Transit</option>
+                            <option value="Idle" className='cursor-pointer'>Idle</option>
+                            <option value="Maintenance" className='cursor-pointer'>Maintenance</option>
                         </select>
                     </div>
 
-                    <div id="trucks-listing" className='flex flex-col gap-4 sm:gap-6 w-full md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-                        {trucks.map(truck => (
+                    <div id="trucks-listing" className='flex flex-col ease-transition gap-4 sm:gap-6 w-full md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+                        {filteredTrucks.map(truck => (
                             <TruckListItem 
                                 key={truck.id}
                                 truckId={truck.id} 

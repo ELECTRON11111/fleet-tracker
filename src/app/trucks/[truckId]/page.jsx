@@ -5,28 +5,35 @@ import { useRouter } from 'next/navigation';
 
 export default function Page() {
     const [truck, setTruck] = useState(null);
+    const [loading, setLoading] = useState(true);
     
     const { truckId } = useParams();
     const router = useRouter();
 
     useEffect(() => {
+        setLoading(true);
+
         // get truck data from local storage
         const trucks = JSON.parse(localStorage.getItem('trucks')) || [];
 
-        if (!trucks.length) {
+        if (trucks.length === 0) {
             // If no trucks are available, redirect to dashboard
             router.push('/dashboard');
             return;
         }
-
+        
+        // Find the truck with the given truckId
         trucks.find(truck => truck.id === truckId) ? setTruck(trucks.find(truck => truck.id === truckId)) : setTruck(null);
 
-        setTimeout(() => {
-            console.log("Truck data landed.")  
+        const identifier = setTimeout(() => {
+            console.log("Truck data landed.");
+            setLoading(false); 
         }, 2000);
+
+        return () => clearTimeout(identifier);
     }, [truckId]);
 
-    if (!truck) {
+    if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
