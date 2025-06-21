@@ -5,11 +5,29 @@ The Tech Stack is `Next Js` + `Tailwind CSS`.
 
 Project Structure is shown below:
 ```
-┌ ○ /                                    
-├ ○ /_not-found                          
-├ ○ /dashboard                           
-├ ○ /trucks                              
-└ ƒ /trucks/[truckId] 
+┌ src/
+│  ├─ app/
+│  │  ├─ layout.jsx
+│  │  ├─ not-found.jsx
+│  │  ├─ page.jsx
+│  │  ├─ dashboard/
+│  │  │   └─ page.jsx
+│  │  └─ trucks/
+│  │      ├─ page.jsx
+│  │      └─ [truckId]/
+│  │          └─ page.jsx
+│  └─ components/
+│      ├─ TruckMap.js
+│      └─ TrucksChart.js
+|      |_ TruckListItem.js
+├ public/
+│  └─ leaflet/
+│      ├─ marker-icon.png
+│      ├─ marker-icon-2x.png
+│      └─ marker-shadow.png
+├ package.json
+├ next.config.js
+└ ...
 ```
 
 The live application URL is [Click Here To View App](https://fleet-tracker-seven.vercel.app/).
@@ -96,7 +114,10 @@ The screenshot below shows the layout for a truck that is "In Transit". That is,
 
 ![Screenshot 2025-06-21 193028](https://github.com/user-attachments/assets/5f2b0613-3101-4491-ab14-3a91e59a9a30)
 
-## Assumptions, known limitations, and improvements
+## known limitations
+
+- There is a possibility of being rate limited by the mock API - it has a free tier of just 50 requests max per day.
+- Chart Js and other similar modules for generating graphs causes some sort of unresponsiveness sometimes. It happens occasionally where it doesn't react quick.
 
 
 
