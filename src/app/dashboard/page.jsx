@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import TruckListItem from '@/components/TruckListItem';
+import TrucksChart from '@/components/TrucksChart';
 
 const Page = () => {
     const [statusFilter, setStatusFilter] = useState("all");
@@ -11,7 +12,8 @@ const Page = () => {
         totalTrucks: 0,
         inTransit: 0,
         idle: 0,
-        maintenance: 0
+        maintenance: 0,
+        avgIdleTime: 0,
     });
     const [error, setError] = useState(null);
 
@@ -56,7 +58,8 @@ const Page = () => {
             totalTrucks: trucks.length,
             inTransit: trucks.filter(truck => truck.status === "In Transit").length,
             idle: trucks.filter(truck => truck.status === "Idle").length,   
-            maintenance: trucks.filter(truck => truck.status === "Maintenance").length
+            maintenance: trucks.filter(truck => truck.status === "Maintenance").length,
+            avgIdleTime: 5.06, // this should be calculated based on the trucks data, but for this demo, it's hardcoded - "no idle time data available"
         });
     }, [trucks]);
 
@@ -130,7 +133,7 @@ const Page = () => {
     
     return (
         <div id='DashboardPage' className='bg-gray-100 pt-[3.5rem] min-h-screen sm:pt-20'>
-            <header className='w-full flex justify-between fixed top-0 left-0 items-center p-4 sm:p-6 bg-white shadow'>
+            <header className='w-full flex justify-between fixed top-0 left-0 z-10 items-center p-4 sm:p-6 bg-white shadow'>
                 <div className='flex items-center gap-2'>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="blue" className="size-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
@@ -145,12 +148,21 @@ const Page = () => {
             <div id="dashboard" className='p-4 sm:px-8 sm:py-6'>
                 {/* 
                 ==============================================================================================================================================
-
-                    DASHBOARD OVERVIEW 
+                
+                DASHBOARD OVERVIEW 
                 ______________________________________________________________________________________________________________________________________________
                 */}
 
-                <div id='overview' className='flex flex-col gap-3 sm:flex-row sm:gap-6 w-full'>
+                <h1 className='font-semibold sm:text-xl py-2'>Fleet Overview Dashboard</h1>
+
+                <TrucksChart 
+                    idle={overviewCounts.idle} 
+                    totalTrucks={overviewCounts.totalTrucks} 
+                    inTransit={overviewCounts.inTransit} 
+                    avgIdleTime={overviewCounts.avgIdleTime} 
+                />
+
+                <div id='overview' className='flex flex-col gap-3 mt-2 md:mt-8 sm:flex-row sm:gap-6 w-full'>
                     <div id="total-trucks" className='bg-white gap-4 ease-transition w-full flex flex-col justify-between p-4 rounded-lg hover:shadow-md'>
                         <div className='flex items-center w-full justify-between font-semibold text-gray-500'>
                             <h2 className='text-black'>Total Trucks</h2>
@@ -192,7 +204,7 @@ const Page = () => {
                             </svg>
                         </div>
 
-                        <h1 className='font-extrabold mt-auto text-red-500 text-3xl'>1.06</h1>
+                        <h1 className='font-extrabold mt-auto text-red-500 text-3xl'>{overviewCounts.avgIdleTime}</h1>
                     </div>
                 </div>
 
@@ -203,9 +215,9 @@ const Page = () => {
                 ______________________________________________________________________________________________________________________________________________
                 */}
 
-                <div id='fleet-overview'>
+                <div id='fleet-overview' className='min-h-[40vh]'>
                     <div id="heading" className='w-full flex items-center py-6 sm:py-7 justify-between gap-4'>
-                        <h1 className='font-semibold sm:text-xl'>Fleet Overview</h1>
+                        <h1 className='font-semibold sm:text-xl'>Truck Listings</h1>
 
                         <select 
                             name="filter" id="Filter" 
